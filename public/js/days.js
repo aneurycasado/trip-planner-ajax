@@ -19,6 +19,15 @@ var daysModule = (function(){
     });
     renderDayButtons();
     switchDay(days.length - 1);
+    $.ajax({
+      type: "POST",
+      url:'/api/days/1',
+      data: JSON.stringify(days[days.length-1]),
+      success: function(data){
+        console.log("In add day");
+        console.log(days[days.length-1]);
+      }
+    });
   }
 
   function switchDay (index) {
