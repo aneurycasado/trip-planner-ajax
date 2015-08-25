@@ -4,12 +4,13 @@
 $(document).ready(function() {
 
   var attractionsByType = {
-    hotels:      all_hotels,
+    hotel:      all_hotels,
     restaurants: all_restaurants,
     activities:  all_activities
   };
 
   function findByTypeAndId (type, id) {
+    if(type==="hotels") type = "hotel";
     var attractions = attractionsByType[type],
         selected;
     attractions.some(function(attraction){
@@ -31,9 +32,12 @@ $(document).ready(function() {
   });
 
   $('#itinerary').on('click', 'button', function() {
-    var $button = $(this),
-        type = $button.data('type'),
-        id = $button.data('id');
+    var $button = $(this)
+    var type = $button.data('type')
+    var id = $button.data('id');
+    console.log("We still hit here");
+    console.log(type);
+    console.log(id);
     daysModule.removeAttraction(findByTypeAndId(type, id));
   });
 

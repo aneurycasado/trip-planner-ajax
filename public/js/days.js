@@ -4,28 +4,27 @@
 var daysModule = (function(){
 
   var exports = {},
-      days = [{
-        hotels:      [],
-        restaurants: [],
-        activities:  []
-      }],
-      currentDay = days[0];
+      days = all_days;
+
+      // days.forEach(function(day){
+      //   renderDay(day);
+      // })
+      var currentDay = days[0];
 
   function addDay () {
-    days.push({
+    var current = {
+      number: days.length,
       hotels: [],
       restaurants: [],
       activities: []
-    });
-    renderDayButtons();
-    switchDay(days.length - 1);
+    };
     $.ajax({
       type: "POST",
-      url:'/api/days/1',
-      data: JSON.stringify(days[days.length-1]),
+      url:'/api/days',
+      data: current,
       success: function(data){
-        console.log("In add day");
-        console.log(days[days.length-1]);
+        days = data;
+        switchDay(days.length);
       }
     });
   }
@@ -36,15 +35,21 @@ var daysModule = (function(){
     $title.children('span').remove();
     $title.prepend('<span>Day ' + (index + 1) + '</span>');
     currentDay = days[index];
-    renderDay();
+    renderDay(currentDay);
     renderDayButtons();
   }
 
   function removeCurrentDay () {
     if (days.length === 1) return;
     var index = days.indexOf(currentDay);
-    days.splice(index, 1);
-    switchDay(index);
+    $.ajax({
+      type:"delete",
+      url:"/api/days/"+index,
+      success: function(data){
+        days = data;
+        switchDay(index);
+      }
+    });
   }
 
   function renderDayButtons () {
@@ -61,28 +66,65 @@ var daysModule = (function(){
   }
 
   exports.addAttraction = function(attraction) {
-    if (currentDay[attraction.type].indexOf(attraction) !== -1) return;
-    currentDay[attraction.type].push(attraction);
-    renderDay(currentDay);
+    if(attraction.type === "hotels") attraction.type = "hotel";
+    $.ajax({
+      type: "POST",
+      url: "/api/days/" + currentDay.number + "/" + attraction.type,
+      data: attraction._id,
+      success: function(data){
+        if (currentDay[attraction.type].indexOf(attraction) !== -1) return;
+        currentDay[attraction.type].push(attraction);
+        days = data;
+        renderDay(currentDay);
+      }
+    })
   };
 
   exports.removeAttraction = function (attraction) {
+    if(attraction.type === "hotels") attraction.type = "hotel";
     var index = currentDay[attraction.type].indexOf(attraction);
-    if (index === -1) return;
-    currentDay[attraction.type].splice(index, 1);
-    renderDay(currentDay);
+    console.log("We are here");
+    console.log("Index", index);
+    console.log("attraction", attraction);
+    $.ajax({
+      type: "put",
+      url: "/api/days/" +currentDay.number + "/" + attraction.type,
+      data: {att_id: attraction._id, index: index},
+      success: function(data){
+        //if (currentDay[attraction.type].indexOf(attraction) !== -1) return;
+        console.log("Before ",currentDay);
+        console.log("Index ", index);
+        currentDay[attraction.type].splice(index, 1);
+        console.log("After ",currentDay);
+        days = data;
+        renderDay(currentDay);
+        console.log("We finished");
+      }
+    });
   };
 
   function renderDay(day) {
     mapModule.eraseMarkers();
-    day = day || currentDay;
+    if(day === undefined){
+      day = {
+        number: days.length,
+        hotel: [],
+        restaurants: [],
+        activities: []
+      }
+    }
     Object.keys(day).forEach(function(type){
-      var $list = $('#itinerary ul[data-type="' + type + '"]');
-      $list.empty();
-      day[type].forEach(function(attraction){
-        $list.append(itineraryHTML(attraction));
-        mapModule.drawAttraction(attraction);
-      });
+      if(type !== "number" && type !== "_id" && type !== "__v"){
+        var $list = $('#itinerary ul[data-type="' + type + '"]');
+        $list.empty();
+        day[type].forEach(function(attraction){
+          console.log(type);
+          attraction.type = type;
+          console.log(attraction);
+          $list.append(itineraryHTML(attraction));
+          mapModule.drawAttraction(attraction);
+        });
+      }
     });
   }
 

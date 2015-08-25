@@ -8,7 +8,7 @@ var mapModule = (function(){
       markers = [],
       bounds = new google.maps.LatLngBounds(),
       iconPath = {
-        hotels: '/images/lodging_0star.png',
+        hotel: '/images/lodging_0star.png',
         restaurants: '/images/restaurant.png',
         activities: '/images/star-3.png'
       },
@@ -127,4 +127,3 @@ var mapModule = (function(){
   return exports;
 
 }());
-
